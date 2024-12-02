@@ -1,2 +1,4 @@
 # github-api
-GitHub Automator
+GitHub Automator 
+just started with the project 
+Feature 1 : Get the list of users with read access
