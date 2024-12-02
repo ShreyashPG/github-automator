@@ -1,45 +1,3 @@
-# #!/bin/bash
-
-# # GitHub API URL
-# API_URL="https://api.github.com"
-
-# # GitHub username and personal access token
-# USERNAME=$username
-# TOKEN=$token
-
-# # User and Repository information
-# REPO_OWNER=$1
-# REPO_NAME=$2
-
-# # Function to make a GET request to the GitHub API
-# function github_api_get {
-#     local endpoint="$1"
-#     local url="${API_URL}/${endpoint}"
-
-#     # Send a GET request to the GitHub API with authentication
-#     curl -s -u "${USERNAME}:${TOKEN}" "$url"
-# }
-
-# # Function to list users with read access to the repository
-# function list_users_with_read_access {
-#     local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/collaborators"
-
-#     # Fetch the list of collaborators on the repository
-#     collaborators="$(github_api_get "$endpoint" | jq -r '.[] | select(.permissions.pull == true) | .login')"
-
-#     # Display the list of collaborators with read access
-#     if [[ -z "$collaborators" ]]; then
-#         echo "No users with read access found for ${REPO_OWNER}/${REPO_NAME}."
-#     else
-#         echo "Users with read access to ${REPO_OWNER}/${REPO_NAME}:"
-#         echo "$collaborators"
-#     fi
-# }
-
-# # Main script
-
-# echo "Listing users with read access to ${REPO_OWNER}/${REPO_NAME}..."
-# list_users_with_read_access
 #!/bin/bash
 
 # GitHub API URL
@@ -51,6 +9,11 @@ read -r USERNAME
 echo -e "\033[1;34mEnter your GitHub personal access token:\033[0m"
 read -rs TOKEN
 echo ""
+echo -e "\033[1;34mEnsure your GitHub PAT has the following scopes:\033[0m"
+echo "repo, repo:status, repo_deployment, public_repo, repo:invite, security_events,"
+echo "read:user, user:email, user:follow."
+echo ""
+
 
 # Function to add color
 function print_color {
@@ -115,6 +78,8 @@ function list_users_with_read_access {
     fi
 }
 
+
+#function to list packages in a repo
 function list_packages {
     prompt_repo_info
     local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/packages"
@@ -127,6 +92,8 @@ function list_packages {
     fi
 }
 
+
+#dunction to list workflows
 function list_workflows {
     prompt_repo_info
     local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows"
@@ -196,6 +163,33 @@ function list_actions {
     echo "$actions"
 }
 
+#function to follow a user
+function follow_user {
+    print_color "\033[1;36m" "Enter the username to follow:"
+    read -r follow_username
+    local endpoint="user/following/$follow_username"
+    response=$(curl -s -X PUT -u "${USERNAME}:${TOKEN}" "${API_URL}/${endpoint}")
+    if [[ -z "$response" ]]; then
+        print_color "\033[1;32m" "Successfully followed $follow_username."
+    else
+        print_color "\033[1;31m" "Failed to follow $follow_username."
+    fi
+}
+
+
+#function to get list_of_emails
+function list_user_emails {
+    local endpoint="user/emails"
+    emails=$(github_api_get "$endpoint" | jq -r '.[].email')
+    if [[ -z "$emails" ]]; then
+        print_color "\033[1;31m" "No emails found."
+    else
+        print_color "\033[1;33m" "User Emails:"
+        echo "$emails"
+    fi
+}
+
+
 # Menu loop
 while true; do
     echo -e "\033[1;35mChoose an option:\033[0m"
@@ -207,7 +201,9 @@ while true; do
     echo "6. List issues"
     echo "7. List pull requests"
     echo "8. List actions"
-    echo "9. Exit"
+    echo "9. List user emails"
+    echo "10. Follow a user"
+    echo "11. Exit"
     
  read -rp "Enter your choice: " choice
     case $choice in
@@ -219,7 +215,9 @@ while true; do
         6) list_issues ;;
         7) list_pull_requests ;;
         8) list_actions ;;
-        9) print_color "\033[1;34m" "Goodbye!"; exit 0 ;;
+        9) handle_errors list_user_emails ;;
+        10) handle_errors follow_user ;;
+        11) print_color "\033[1;34m" "Goodbye!"; exit 0 ;;
         *) print_color "\033[1;31m" "Invalid choice. Please try again." ;;
     esac
 done
