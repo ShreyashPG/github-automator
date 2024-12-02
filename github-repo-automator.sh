@@ -136,13 +136,18 @@ function list_discussions {
   fi
 }
 
-# Function to list issues in a repository
+# Enhanced error handling for issues
 function list_issues {
     prompt_repo_info
     local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/issues"
-    issues="$(github_api_get "$endpoint" | jq -r '.[] | .title')"
-    print_color "\033[1;33m" "Issues in ${REPO_OWNER}/${REPO_NAME}:"
-    echo "$issues"
+    issues=$(github_api_get "$endpoint" | jq -r '.[]? | .title')
+    
+    if [[ -z "$issues" ]]; then
+        print_color "\033[1;31m" "No issues found in ${REPO_OWNER}/${REPO_NAME}."
+    else
+        print_color "\033[1;33m" "Issues in ${REPO_OWNER}/${REPO_NAME}:"
+        echo "$issues"
+    fi
 }
 
 # Function to list pull requests in a repository
@@ -154,13 +159,18 @@ function list_pull_requests {
     echo "$pull_requests"
 }
 
-# Function to list actions in a repository
+# Correct list_actions endpoint and parsing
 function list_actions {
     prompt_repo_info
     local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/actions/runs"
-    actions="$(github_api_get "$endpoint" | jq -r '.workflow_runs[] | .name')"
-    print_color "\033[1;33m" "Actions in ${REPO_OWNER}/${REPO_NAME}:"
-    echo "$actions"
+    actions=$(github_api_get "$endpoint" | jq -r '.workflow_runs[]? | .name')
+    
+    if [[ -z "$actions" ]]; then
+        print_color "\033[1;31m" "No actions found in ${REPO_OWNER}/${REPO_NAME}."
+    else
+        print_color "\033[1;33m" "Actions in ${REPO_OWNER}/${REPO_NAME}:"
+        echo "$actions"
+    fi
 }
 
 #function to follow a user
