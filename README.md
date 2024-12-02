@@ -101,5 +101,5 @@ Contributions are welcome! Feel free to fork the project, submit pull requests, 
 
 ## Author
 
-- **[Your Name]**  
-  [GitHub Profile](https://github.com/your-username)
+- **[ShreyashPG]**  
+  [GitHub Profile](https://github.com/ShreyashPG)
