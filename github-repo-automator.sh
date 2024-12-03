@@ -3,16 +3,51 @@
 # GitHub API URL
 API_URL="https://api.github.com"
 
-# GitHub username and personal access token (prompt user for input)
+# # GitHub username and personal access token (prompt user for input)
+# echo -e "\033[1;34mEnter your GitHub username:\033[0m"
+# read -r USERNAME
+# echo -e "\033[1;34mEnter your GitHub personal access token:\033[0m"
+# read -rs TOKEN
+# echo ""
+# echo -e "\033[1;34mEnsure your GitHub PAT has the following scopes:\033[0m"
+# echo "repo, repo:status, repo_deployment, public_repo, repo:invite, security_events,"
+# echo ""
+
+# Function to print required scopes
+function print_required_scopes {
+    echo -e "\033[1;34mEnsure your GitHub API Personal Access Token (PAT) has the following scopes:\033[0m"
+    echo -e "\033[1;33mRepository Access Scopes:\033[0m"
+    echo -e "  1. \033[1;32mrepo:\033[0m Full control of private repositories"
+    echo -e "  2. \033[1;32mrepo:status:\033[0m Access commit status"
+    echo -e "  3. \033[1;32mrepo_deployment:\033[0m Access deployment statuses"
+    echo -e "  4. \033[1;32mpublic_repo:\033[0m Access public repositories"
+    echo -e "  5. \033[1;32mrepo:invite:\033[0m Manage repository invitations"
+    echo -e "  6. \033[1;32msecurity_events:\033[0m Read and manage security events"
+    
+    echo -e "\n\033[1;33mUser Access Scopes:\033[0m"
+    echo -e "  1. \033[1;32mread:user:\033[0m Read non-sensitive user profile information"
+    echo -e "  2. \033[1;32muser:email:\033[0m Access the user’s email addresses"
+    echo -e "  3. \033[1;32muser:follow:\033[0m Follow and unfollow users"
+    
+    echo -e "\n\033[1;34mTo create a token, visit:\033[0m \033[1;36mhttps://github.com/settings/tokens\033[0m"
+}
+
+# Prompt for GitHub username and PAT
 echo -e "\033[1;34mEnter your GitHub username:\033[0m"
 read -r USERNAME
-echo -e "\033[1;34mEnter your GitHub personal access token:\033[0m"
+echo -e "\033[1;34mEnter your GitHub Personal Access Token (PAT):\033[0m"
 read -rs TOKEN
-echo ""
-echo -e "\033[1;34mEnsure your GitHub PAT has the following scopes:\033[0m"
-echo "repo, repo:status, repo_deployment, public_repo, repo:invite, security_events,"
-echo "read:user, user:email, user:follow."
-echo ""
+
+# Check if the GitHub PAT works
+RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "$USERNAME:$TOKEN" "$API_URL/user")
+
+if [[ "$RESPONSE" -eq 200 ]]; then
+    echo -e "\n\033[1;32mAuthentication successful!\033[0m"
+else
+    echo -e "\n\033[1;31mAuthentication failed! Please check your GitHub username or PAT.\033[0m"
+    print_required_scopes
+    exit 1
+fi
 
 
 # Function to add color
@@ -156,7 +191,11 @@ function list_pull_requests {
     local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/pulls"
     pull_requests="$(github_api_get "$endpoint" | jq -r '.[] | .title')"
     print_color "\033[1;33m" "Pull Requests in ${REPO_OWNER}/${REPO_NAME}:"
-    echo "$pull_requests"
+    if [[ -z "$pull_requests" ]]; then
+        print_color "\033[1;31m" "No pull requests found."
+    else 
+        echo "$pull_requests"
+    fi
 }
 
 # Correct list_actions endpoint and parsing
@@ -199,12 +238,72 @@ function list_user_emails {
     fi
 }
 
+#function to list repo invitations
+function list_repo_invitations {
+    local endpoint="user/repository_invitations"
+    invitations=$(github_api_get "$endpoint" | jq -r '.[] | .repository.full_name')
+
+    if [[ -z "$invitations" ]]; then
+        print_color "\033[1;31m" "No repository invitations found."
+    else
+        print_color "\033[1;32m" "Repository invitations:"
+        echo "$invitations"
+    fi
+}
+
+# Function to list all public repositories of a user
+function list_public_repos {
+    print_color "\033[1;36m" "Enter the GitHub username to fetch public repositories:"
+    read -r target_user
+    local endpoint="users/${target_user}/repos?type=public"
+    
+    repos=$(github_api_get "$endpoint" | jq -r '.[] | .name')
+
+    if [[ -z "$repos" ]]; then
+        print_color "\033[1;31m" "No public repositories found for user: $target_user."
+    else
+        print_color "\033[1;33m" "Public repositories of $target_user:"
+        echo "$repos"
+    fi
+}
+
+# Function to get commit history of a public repository
+function get_commit_history {
+    prompt_repo_info
+    local endpoint="repos/${REPO_OWNER}/${REPO_NAME}/commits"
+    
+    commits=$(github_api_get "$endpoint" | jq -r '.[] | "\(.commit.author.name) - \(.commit.message) - \(.sha)"')
+
+    if [[ -z "$commits" ]]; then
+        print_color "\033[1;31m" "No commits found for repository: ${REPO_OWNER}/${REPO_NAME}."
+    else
+        print_color "\033[1;33m" "Commit history for ${REPO_OWNER}/${REPO_NAME}:"
+        echo "$commits"
+    fi
+}
+
+# Function to fetch and display a user's profile data
+function get_user_profile_data {
+    print_color "\033[1;36m" "Enter the GitHub username to fetch profile data:"
+    read -r target_user
+    local endpoint="users/${target_user}"
+    
+    profile_data=$(github_api_get "$endpoint")
+
+    if [[ -z "$profile_data" ]]; then
+        print_color "\033[1;31m" "Failed to fetch profile data for user: $target_user."
+    else
+        print_color "\033[1;33m" "Profile data for $target_user:"
+        echo "$profile_data" | jq '. | {Login: .login, Name: .name, Company: .company, Location: .location, Email: .email, Bio: .bio, Followers: .followers, Following: .following, Created_At: .created_at}'
+    fi
+}
+
 
 # Menu loop
 while true; do
     echo -e "\033[1;35mChoose an option:\033[0m"
-    echo "1. List users with read access"
-    echo "2. List packages"
+    echo "1. List users with read access (collaborators with pull access)"
+    echo "2. List packages in the repository"
     echo "3. List workflows"
     echo "4. List projects"
     echo "5. List discussions"
@@ -213,7 +312,11 @@ while true; do
     echo "8. List actions"
     echo "9. List user emails"
     echo "10. Follow a user"
-    echo "11. Exit"
+    echo "11. List repository invitations"
+    echo "12. List all public repositories of a user"
+    echo "13. Get commit history of a public repository"
+    echo "14. Get user profile data"
+    echo "15. Exit"
     
  read -rp "Enter your choice: " choice
     case $choice in
@@ -222,12 +325,16 @@ while true; do
         3) handle_errors list_workflows ;;
         4) handle_errors list_projects ;;
         5) handle_errors list_discussions ;;
-        6) list_issues ;;
-        7) list_pull_requests ;;
-        8) list_actions ;;
+        6) handle_errors list_issues ;;
+        7) handle_errors list_pull_requests ;;
+        8) handle_errors list_actions ;;
         9) handle_errors list_user_emails ;;
         10) handle_errors follow_user ;;
-        11) print_color "\033[1;34m" "Goodbye!"; exit 0 ;;
+        11) handle_errors list_repo_invitations ;;
+        12) handle_errors list_public_repos ;;
+        13) handle_errors get_commit_history ;;
+        14) handle_errors get_user_profile_data ;;
+        15) print_color "\033[1;34m" "Goodbye!"; exit 0 ;;
         *) print_color "\033[1;31m" "Invalid choice. Please try again." ;;
     esac
 done
