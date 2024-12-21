@@ -1,105 +1,181 @@
+# GitHub Repository Management Tool (my-github-manager)
 
-# GitHub Automator
+A comprehensive command-line tool for managing GitHub repositories. This tool provides various automation features for GitHub repository management tasks using the GitHub API.
 
-A Bash script that automates various GitHub repository management tasks using the GitHub API. It provides functionality to list collaborators, packages, workflows, discussions, projects, and more. Additionally, it allows following users and retrieving user email information.
+![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
+![Shell Script](https://img.shields.io/badge/shell_script-%23121011.svg?style=for-the-badge&logo=gnu-bash&logoColor=white)
+![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)
 
-## Features
+## 🚀 Features
 
-- **List Users with Read Access:** Displays users with pull access to a specified repository.
-- **List Packages:** Retrieves all packages within a repository.
-- **List Workflows:** Lists all GitHub Actions workflows defined in a repository.
-- **List Projects:** Shows the projects associated with a repository.
-- **List Discussions:** Displays discussions within the repository.
-- **List Issues:** Retrieves a list of issues in the repository.
-- **List Pull Requests:** Shows all pull requests in the repository.
-- **List Actions Runs:** Lists the action runs for a repository.
-- **List User Emails:** Retrieves email addresses associated with the GitHub user.
-- **Follow a User:** Follows a specified GitHub user.
+- 📋 List repository collaborators with read access
+- 📦 View repository packages
+- 🔄 List GitHub Actions workflows
+- 📊 Browse repository projects
+- 💬 Access repository discussions
+- 🎫 Track issues and pull requests
+- 📈 Monitor GitHub Actions runs
+- 📧 Manage user emails
+- 👥 Follow/unfollow users
+- 📨 Handle repository invitations
+- 📝 View commit history
+- 👤 Access user profile data
 
-## Requirements
+## 📋 Prerequisites
 
-- **Bash Shell**
-- **curl**: For making HTTP requests.
-- **jq**: For parsing JSON responses.
-  
-  Install `jq` using:
-  ```bash
-  sudo apt-get install jq  # Debian/Ubuntu
-  sudo yum install jq      # CentOS/Fedora
-  brew install jq          # macOS
-  ```
+### System Requirements
+- Node.js (v12 or higher)
+- Bash shell environment
+- curl
+- jq (JSON processor)
 
-## Prerequisites
+### Installing Dependencies
 
-- A GitHub [Personal Access Token (PAT)](https://github.com/settings/tokens) with the following scopes:
-  - `repo`, `repo:status`, `repo_deployment`, `public_repo`, `repo:invite`
-  - `security_events`, `read:user`, `user:email`, `user:follow`
-
-## Installation
-
-1. Clone the repository or download the script:
-   ```bash
-   git clone https://github.com/your-username/github-automator.git
-   cd github-automator
-   ```
-
-2. Make the script executable:
-   ```bash
-   chmod +x github-automator.sh
-   ```
-
-## Usage
-
-1. Run the script:
-   ```bash
-   ./github-automator.sh
-   ```
-
-2. Follow the prompts:
-   - Enter your GitHub username.
-   - Enter your GitHub personal access token (input is hidden for security).
-
-3. Choose an option from the menu to perform the desired operation.
-
-## Example Output
-
+#### Linux (Debian/Ubuntu)
+```bash
+sudo apt-get update
+sudo apt-get install curl jq
 ```
-Enter your GitHub username:
-Enter your GitHub personal access token:
-Ensure your GitHub PAT has the following scopes:
-repo, repo:status, repo_deployment, public_repo, repo:invite, security_events,
-read:user, user:email, user:follow.
 
-Choose an option:
+#### macOS
+```bash
+brew install curl jq
+```
+
+#### Windows
+```bash
+# Using Chocolatey
+choco install curl jq
+
+# Make sure Git Bash is installed
+# Download from: https://git-scm.com/downloads
+```
+
+### GitHub Personal Access Token
+You need a GitHub Personal Access Token with the following scopes:
+- Repository access: `repo`, `repo:status`, `repo_deployment`, `public_repo`, `repo:invite`
+- Security access: `security_events`
+- User access: `read:user`, `user:email`, `user:follow`
+
+[Create a new token here](https://github.com/settings/tokens)
+
+## 📥 Installation
+
+Install globally using npm:
+```bash
+npm install -g my-github-manager
+```
+
+## 🎮 Usage
+
+1. Start the tool:
+```bash
+my-github-manager
+```
+
+2. Enter your credentials when prompted:
+   - GitHub username
+   - GitHub Personal Access Token (PAT)
+
+3. Choose from the available options in the menu:
+```
 1. List users with read access
 2. List packages
-...
-Enter your choice: 1
-Enter the repository owner:
-Enter the repository name:
-Users with read access to <owner>/<repo>:
+3. List workflows
+4. List projects
+5. List discussions
+6. List issues
+7. List pull requests
+8. List actions
+9. List user emails
+10. Follow a user
+11. List repository invitations
+12. List all public repositories of a user
+13. Get commit history of a public repository
+14. Get user profile data
+15. Exit
+```
+
+## 🔍 Example Usage
+
+### Listing Repository Collaborators
+```bash
+$ my-github-manager
+> Enter your choice: 1
+> Enter the repository owner: octocat
+> Enter the repository name: Hello-World
+
+Users with read access to octocat/Hello-World:
 - user1
 - user2
 ```
 
-## Error Handling
+### Following a User
+```bash
+$ my-github-manager
+> Enter your choice: 10
+> Enter the username to follow: octocat
 
-- If an error occurs, the script will provide an appropriate message.
-- Some operations allow you to retry in case of failure.
+Successfully followed octocat.
+```
 
-## Deployment
+## ⚠️ Error Handling
 
-You can deploy this script on an AWS EC2 instance or any server with Bash support for remote execution.
+The tool includes robust error handling:
+- Authentication validation
+- API response checking
+- Retry options for failed operations
+- Clear error messages
 
-## License
+## 🔐 Security Notes
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+- Never share your Personal Access Token
+- Token is read securely (hidden input)
+- Temporary files are handled securely
+- No sensitive data is logged
 
-## Contributing
+## 🛠️ Troubleshooting
 
-Contributions are welcome! Feel free to fork the project, submit pull requests, or report issues.
+Common issues and solutions:
 
-## Author
+1. Authentication Failed
+   - Verify your GitHub username
+   - Check if your PAT has expired
+   - Ensure correct PAT scopes are enabled
 
-- **[ShreyashPG]**  
-  [GitHub Profile](https://github.com/ShreyashPG)
+2. Command Not Found
+   - Verify global npm installation
+   - Check if PATH includes npm global binaries
+
+3. jq Not Found
+   - Install jq using package manager
+   - Verify jq installation in PATH
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## ✨ Acknowledgments
+
+- GitHub API Documentation
+- jq Documentation
+- Shell Scripting Community
+
+## 📞 Support
+
+For support, please:
+1. Check existing issues
+2. Create a new issue with detailed description
+3. Include error messages and environment details
+
+---
+
+Made with ❤️ for the GitHub community
